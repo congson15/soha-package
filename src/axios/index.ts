@@ -6,33 +6,33 @@ export const axiosInstance = axios.create({
 });
 
 interface IRequestOptions {
+  url: string;
   headers?: { [key: string]: string };
   method: 'GET' | 'POST';
-  path: string;
-  body?: { [key: string]: string };
+  data?: { [key: string]: string } | string;
 }
 
 // axiosInstance.interceptors.response.use((response) => response.data);
 
 export const axiosServices = {
   post: <T = unknown>(
-    path: string,
-    body: { [key: string]: string },
+    url: string,
+    data: { [key: string]: string } | string,
     headers: { [key: string]: string } = {},
   ): Promise<AxiosRequestConfig<T>> => {
     const options: IRequestOptions = {
       method: 'POST',
-      path,
+      url,
       headers,
-      body,
+      data,
     };
 
     return axiosInstance.request(options);
   },
-  get: <T = unknown>(path: string, headers: { [key: string]: string } = {}): Promise<AxiosResponse<T>> => {
+  get: <T = unknown>(url: string, headers: { [key: string]: string } = {}): Promise<AxiosResponse<T>> => {
     const options: IRequestOptions = {
       method: 'GET',
-      path,
+      url,
       headers,
     };
 

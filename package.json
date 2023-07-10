@@ -22,7 +22,7 @@
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.3.1",
     "eslint": "^8.44.0",
-    "husky": "^8.0.3",
+    "husky": "^8.0.0",
     "lint-staged": "^13.2.3",
     "prettier": "^3.0.0",
     "ts-node": "^10.9.1",
@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "@commitlint/config-conventional": "^17.6.6",
+    "commitlint": "^17.6.6",
     "nodemon": "^3.0.1"
   }
 }
