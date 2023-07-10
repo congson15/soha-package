@@ -1,8 +1,8 @@
 Arguments: 
-  C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\yarn\bin\yarn.js add -D @commitlint/{cli,config-conventional}
+  C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\yarn\bin\yarn.js lint-staged
 
 PATH: 
-  C:\Program Files\Oculus\Support\oculus-runtime;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\Git\cmd;C:\Users\son.phan\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Program Files\dotnet\;C:\Users\son.phan\AppData\Local\pnpm;C:\Users\son.phan\AppData\Local\Microsoft\WindowsApps;C:\Users\son.phan\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\son.phan\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Users\son.phan\AppData\Local\GitHubDesktop\bin;C:\Users\son.phan\AppData\Local\Programs\oh-my-posh\bin;C:\Program Files (x86)\BrowserStackLocal\
+  C:\Program Files\Git\mingw64\libexec\git-core;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\son.phan\bin;C:\Program Files\Oculus\Support\oculus-runtime;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32\OpenSSH;C:\Program Files\Git\cmd;C:\Users\son.phan\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Program Files\dotnet;C:\Users\son.phan\AppData\Local\pnpm;C:\Users\son.phan\AppData\Local\Microsoft\WindowsApps;C:\Users\son.phan\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\son.phan\AppData\Roaming\nvm;C:\Program Files\nodejs;C:\Users\son.phan\AppData\Local\GitHubDesktop\bin;C:\Users\son.phan\AppData\Local\Programs\oh-my-posh\bin;C:\Program Files (x86)\BrowserStackLocal
 
 Yarn version: 
   1.22.19
@@ -14,17 +14,12 @@ Platform:
   win32 x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@commitlint%2f%7Bcli,config-conventional%7D: Not found
-      at Request.params.callback [as _callback] (C:\Users\son.phan\AppData\Roaming\nvm\v16.14.0\node_modules\yarn\lib\cli.js:66145:18)
-      at Request.self.callback (C:\Users\son.phan\AppData\Roaming\nvm\v16.14.0\node_modules\yarn\lib\cli.js:140890:22)
-      at Request.emit (node:events:520:28)
-      at Request.<anonymous> (C:\Users\son.phan\AppData\Roaming\nvm\v16.14.0\node_modules\yarn\lib\cli.js:141862:10)
-      at Request.emit (node:events:520:28)
-      at IncomingMessage.<anonymous> (C:\Users\son.phan\AppData\Roaming\nvm\v16.14.0\node_modules\yarn\lib\cli.js:141784:12)
-      at Object.onceWrapper (node:events:639:28)
-      at IncomingMessage.emit (node:events:532:35)
-      at endReadableNT (node:internal/streams/readable:1346:12)
-      at processTicksAndRejections (node:internal/process/task_queues:83:21)
+  SyntaxError: D:\MyGitRepo\soha-package\package.json: Unexpected token } in JSON at position 354
+      at JSON.parse (<anonymous>)
+      at C:\Users\son.phan\AppData\Roaming\nvm\v16.14.0\node_modules\yarn\lib\cli.js:1629:59
+      at Generator.next (<anonymous>)
+      at step (C:\Users\son.phan\AppData\Roaming\nvm\v16.14.0\node_modules\yarn\lib\cli.js:310:30)
+      at C:\Users\son.phan\AppData\Roaming\nvm\v16.14.0\node_modules\yarn\lib\cli.js:321:13
 
 npm manifest: 
   {
@@ -38,7 +33,7 @@ npm manifest:
       "prepare": "husky install",
       "lint": "eslint src/**/*.ts",
       "format": "eslint src/**/*.ts --fix",
-      "prettier": "prettier --write \"src/**/*.ts\""
+      "prettier": "prettier --write \"src/**/*.ts\"",
     },
     "devDependencies": {
       "@tsconfig/node16": "^16.1.0",
