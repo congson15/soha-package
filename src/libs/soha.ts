@@ -2,7 +2,7 @@ import { axiosServices } from '../axios';
 import { SGU_PARAMS, TABLE_DOM_PARAMS } from '../constants/SGU';
 import { getHeaders, getLoginFormData, parseCookieFromHeaders, transformTableElement } from '../utils';
 import CheerioHelper from './cheerio';
-import { CRAWL_PATH, TD_REGEX } from '../constants';
+import { CRAWL_LOGIN_PATH, CRAWL_PATH, CRAWL_CHECK_LIVE_PATH, LIVE_REGEX, TD_REGEX } from '../constants';
 import { ISubject } from '../types';
 
 class SoHaHelper {
@@ -11,13 +11,14 @@ class SoHaHelper {
   private cheerioHelper: CheerioHelper = new CheerioHelper();
   private username: string;
   private password: string;
+  private subjectList: ISubject[] = [];
 
   constructor(username: string, password: string) {
     this.username = username;
     this.password = password;
   }
 
-  private generateSubject(element: cheerio.Element, subjectList: ISubject[]) {
+  private generateSubject(element: cheerio.Element) {
     let match;
     const subject: ISubject = {
       id: this.cheerioHelper.getChildValue(element, TABLE_DOM_PARAMS.id),
@@ -49,21 +50,19 @@ class SoHaHelper {
     while ((match = TD_REGEX.exec(this.cheerioHelper.getChild(element, TABLE_DOM_PARAMS.giangVien).toString()))) {
       subject.giangVien.push(match[1]);
     }
-    subjectList.push(subject);
+    this.subjectList.push(subject);
   }
 
   private async checkLiveCookie() {
-    const response = await axiosServices.get('/Default.aspx?page=thaydoittcn', {
+    const response = await axiosServices.get(CRAWL_CHECK_LIVE_PATH as string, {
       ...getHeaders(this.cookie as string),
     });
-    if (response && response.data) {
-      this.cheerioHelper.setHTML(response.data as string);
-      const live = this.cheerioHelper.getElementText(`#${SGU_PARAMS.CHANGE_INFORMATION}`);
-      if (live.includes('THAY ĐỔI THÔNG TIN CÁ NHÂN')) {
-        return true;
-      }
+    if (!response) return false;
+    this.cheerioHelper.setHTML(response.data as string);
+    const live = this.cheerioHelper.getElementText(`#${SGU_PARAMS.CHANGE_INFORMATION}`);
+    if (live.includes(LIVE_REGEX)) {
+      return true;
     }
-    return false;
   }
 
   private async refreshAccount() {
@@ -72,7 +71,7 @@ class SoHaHelper {
       __VIEWSTATE: this._viewState,
       ...getLoginFormData({ username: this.username, password: this.password }),
     };
-    await axiosServices.post(`/default.aspx`, data, { ...getHeaders(this.cookie as string) });
+    await axiosServices.post(CRAWL_LOGIN_PATH as string, data, { ...getHeaders(this.cookie as string) });
   }
 
   private parseViewStateFromBody(body: string): string | undefined {
@@ -80,11 +79,15 @@ class SoHaHelper {
     return this.cheerioHelper.getElementValue(`#${SGU_PARAMS.__VIEWSTATE}`);
   }
 
-  public async getCookieAndViewState(): Promise<void> {
+  public async getCookieAndViewState() {
     try {
       const result = await axiosServices.get('/');
       this.cookie = parseCookieFromHeaders(result.headers) as string;
       this._viewState = this.parseViewStateFromBody(result.data as string) as string;
+      return {
+        cookie: this.cookie,
+        _viewState: this._viewState,
+      };
     } catch (error) {}
   }
 
@@ -97,14 +100,12 @@ class SoHaHelper {
     if (!this.checkLiveCookie()) {
       await this.refreshAccount();
     }
-    const subjectList: ISubject[] = [];
     const allSubject = html.split(`"value":"`);
     const tableElm = transformTableElement(allSubject[1]);
-    this.cheerioHelper.getTableElement(tableElm, (element) => this.generateSubject(element, subjectList));
-    return subjectList;
+    this.cheerioHelper.getTableElement(tableElm, (element) => this.generateSubject(element));
   }
 
-  public async filterSubjects(subjectName: string) {
+  public async getSubjectsByName(subjectName: string) {
     try {
       const { X_AJAXPRO_METHOD } = SGU_PARAMS;
       const header = {
@@ -114,14 +115,20 @@ class SoHaHelper {
       const data = `{"dkLoc":"${subjectName}"}`;
       const response = await axiosServices.post(CRAWL_PATH as string, data, header);
       if (response && response.data) {
+        await this.generateSubjects(JSON.stringify(response.data));
         return {
-          subjectList: await this.generateSubjects(JSON.stringify(response.data)),
+          message: 'Lấy danh sách môn thành công',
+          subjectList: this.subjectList,
         };
       }
+      return {
+        message: 'Lấy danh sách môn thất bại',
+        subjectList: [],
+      };
     } catch (error) {}
   }
 
-  public async login(): Promise<string | undefined> {
+  public async login() {
     try {
       await this.getCookieAndViewState();
 
@@ -129,19 +136,23 @@ class SoHaHelper {
         __VIEWSTATE: this._viewState,
         ...getLoginFormData({ username: this.username, password: this.password }),
       };
-      const response = await axiosServices.post(`/default.aspx`, data, { ...getHeaders(this.cookie as string) });
+      const response = await axiosServices.post(CRAWL_LOGIN_PATH as string, data, {
+        ...getHeaders(this.cookie as string),
+      });
       this.cheerioHelper.setHTML(response.data as string);
       const fullName = this.cheerioHelper.getElementText('#ctl00_Header1_Logout1_lblNguoiDung');
       const isLogin = this.cheerioHelper.getElementText('#ctl00_menu_lblThayDoiTTCN');
       if (isLogin) {
-        Promise.resolve({
+        return {
           fullName,
-        });
+          message: 'Đăng nhập thành công',
+        };
       }
-    } catch (error) {
-      console.log(error);
-    }
-    return undefined;
+      return {
+        fullName: '',
+        message: 'Đăng nhập thất bại.',
+      };
+    } catch (error) {}
   }
 }
 
