@@ -1,19 +1,20 @@
 import { axiosServices } from '../axios';
-import { SGU_PARAMS, TABLE_DOM_PARAMS } from '../constants/SGU';
+import { HTML_DOM_PARAMS, SGU_PARAMS, TABLE_DOM_PARAMS } from '../constants/SGU';
 import { getHeaders, getLoginFormData, parseCookieFromHeaders, transformTableElement } from '../utils';
 import CheerioHelper from './cheerio';
 import { CRAWL_LOGIN_PATH, CRAWL_PATH, CRAWL_CHECK_LIVE_PATH, LIVE_REGEX, TD_REGEX } from '../constants';
 import { ISubject } from '../types';
+import { MESSAGE_LIST } from '../constants/message';
 
 class SoHaHelper {
   private _viewState!: string;
   private cookie!: string;
   private cheerioHelper: CheerioHelper = new CheerioHelper();
-  private username: string;
-  private password: string;
+  private username!: string;
+  private password!: string;
   private subjectList: ISubject[] = [];
 
-  constructor(username: string, password: string) {
+  public setupAccount(username: string, password: string) {
     this.username = username;
     this.password = password;
   }
@@ -59,7 +60,7 @@ class SoHaHelper {
     });
     if (!response) return false;
     this.cheerioHelper.setHTML(response.data as string);
-    const live = this.cheerioHelper.getElementText(`#${SGU_PARAMS.CHANGE_INFORMATION}`);
+    const live = this.cheerioHelper.getElementText(`#${HTML_DOM_PARAMS.CHANGE_INFORMATION}`);
     if (live.includes(LIVE_REGEX)) {
       return true;
     }
@@ -94,7 +95,7 @@ class SoHaHelper {
   public async generateSubjects(html: string) {
     if (html.indexOf('Object reference not set to an instance of an object.') !== -1) {
       return {
-        message: 'Không lọc được môn, vui lòng thử lại sau.',
+        message: MESSAGE_LIST.FILTER_SUBJECT_FAILED,
       };
     }
     if (!this.checkLiveCookie()) {
@@ -102,6 +103,7 @@ class SoHaHelper {
     }
     const allSubject = html.split(`"value":"`);
     const tableElm = transformTableElement(allSubject[1]);
+    if (this.subjectList.length > 0) this.subjectList = [];
     this.cheerioHelper.getTableElement(tableElm, (element) => this.generateSubject(element));
   }
 
@@ -110,19 +112,19 @@ class SoHaHelper {
       const { X_AJAXPRO_METHOD } = SGU_PARAMS;
       const header = {
         ...getHeaders(this.cookie as string),
-        [X_AJAXPRO_METHOD]: 'LocTheoMonHoc',
+        [X_AJAXPRO_METHOD]: SGU_PARAMS.LOC_THEO_MON_HOC,
       };
       const data = `{"dkLoc":"${subjectName}"}`;
       const response = await axiosServices.post(CRAWL_PATH as string, data, header);
       if (response && response.data) {
         await this.generateSubjects(JSON.stringify(response.data));
         return {
-          message: 'Lấy danh sách môn thành công',
+          message: MESSAGE_LIST.GET_SUBJECTS_SUCCESS,
           subjectList: this.subjectList,
         };
       }
       return {
-        message: 'Lấy danh sách môn thất bại',
+        message: MESSAGE_LIST.GET_SUBJECTS_FAILED,
         subjectList: [],
       };
     } catch (error) {}
@@ -140,17 +142,17 @@ class SoHaHelper {
         ...getHeaders(this.cookie as string),
       });
       this.cheerioHelper.setHTML(response.data as string);
-      const fullName = this.cheerioHelper.getElementText('#ctl00_Header1_Logout1_lblNguoiDung');
-      const isLogin = this.cheerioHelper.getElementText('#ctl00_menu_lblThayDoiTTCN');
+      const fullName = this.cheerioHelper.getElementText(`#${HTML_DOM_PARAMS.FULLNAME}`);
+      const isLogin = this.cheerioHelper.getElementText(`#${HTML_DOM_PARAMS.TTCN}`);
       if (isLogin) {
         return {
           fullName,
-          message: 'Đăng nhập thành công',
+          message: MESSAGE_LIST.LOGIN_SUCCESS,
         };
       }
       return {
         fullName: '',
-        message: 'Đăng nhập thất bại.',
+        message: MESSAGE_LIST.LOGIN_FAILED,
       };
     } catch (error) {}
   }
